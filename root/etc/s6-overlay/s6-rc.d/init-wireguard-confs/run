@@ -214,13 +214,6 @@ if [[ -n "$PEERS" ]]; then
         fi
     fi
     if [[ -n "$IP6_SUBNET" ]]; then
-        # must end with : to allow host-ID concatenation (e.g. 2001:db8:b00b:420::)
-        if [[ ! "$IP6_SUBNET" =~ :$ ]]; then
-            echo "**** ERROR: IP6_SUBNET must end with ':' (e.g., 2001:db8:b00b:420:0:0:0:). IPv6 disabled. ****"
-            IP6_SUBNET=""
-        fi
-    fi
-    if [[ -n "$IP6_SUBNET" ]]; then
         # basic format: only hex digits and colons
         if [[ ! "$IP6_SUBNET" =~ ^[0-9a-fA-F:]+$ ]]; then
             echo "**** ERROR: IP6_SUBNET contains invalid characters. IPv6 disabled. ****"
