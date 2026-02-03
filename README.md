@@ -100,7 +100,7 @@ services:
     environment:
       - PEERS=3
       - SERVERURL=wireguard.domain.com
-      - IP6_SUBNET=2001:db8:b00b:42a::
+      - IP6_SUBNET="2001:db8:b00b:42a::"
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - PERSISTENTKEEPALIVEPEERS=all
     restart: unless-stopped
@@ -146,7 +146,7 @@ services:
       - PEERS=3
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - INTERNAL_SUBNET=10.14.14.0/24
-      - IP6_SUBNET: 2001:db8:b00b:42a::
+      - IP6_SUBNET="2001:db8:b00b:42a::"
       - ALLOWEDIPS=0.0.0.0/0, ::/0
       - PERSISTENTKEEPALIVE_PEERS=all
     volumes:
