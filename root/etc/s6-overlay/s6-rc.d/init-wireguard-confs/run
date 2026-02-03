@@ -63,6 +63,10 @@ DUDE"
                 fi
                 if [[ -n "${IP6_SUBNET}" ]]; then
                     CLIENT_IP6=$(grep "Address" "/config/${PEER_ID}/${PEER_ID}.conf" | awk '{print $NF}' | cut -d, -f2)
+                    # cut -f2 returns the whole string when no comma exists; discard if not IPv6
+                    if [[ ! "$CLIENT_IP6" =~ : ]]; then
+                        CLIENT_IP6=""
+                    fi
                     if [[ -n "${ORIG_IP6_SUBNET}" ]] && [[ "${IP6_SUBNET}" != "${ORIG_IP6_SUBNET}" ]]; then
                         CLIENT_IP6=""
                     fi
@@ -214,9 +218,9 @@ if [[ -n "$PEERS" ]]; then
         fi
     fi
     if [[ -n "$IP6_SUBNET" ]]; then
-        # must end with :: to allow host-ID concatenation (e.g. 2001:db8:b00b:420::)
-        if [[ ! "$IP6_SUBNET" =~ ::$ ]]; then
-            echo "**** ERROR: IP6_SUBNET must end with '::' (e.g., 2001:db8:b00b:420::). IPv6 disabled. ****"
+        # must end with colon to allow host-ID concatenation (e.g. 2001:db8:b00b:420::)
+        if [[ ! "$IP6_SUBNET" =~ :$ ]]; then
+            echo "**** ERROR: IP6_SUBNET must end with ':' (e.g., 2001:db8:b00b:420::). IPv6 disabled. ****"
             IP6_SUBNET=""
         fi
     fi
