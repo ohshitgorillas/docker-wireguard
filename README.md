@@ -1,7 +1,7 @@
 # docker-wireguard
 
 > **Fork notice:** This is a community fork of [linuxserver/docker-wireguard](https://github.com/linuxserver/docker-wireguard).
-> It is **not** an official LinuxServer.io image. Issues specific to this fork (IPv6 GUA support) should be
+> It is **not** an official LinuxServer.io image. Issues specific to this fork (IPv6 support) should be
 > filed here. General WireGuard container issues should be reported [upstream](https://github.com/linuxserver/docker-wireguard/issues).
 
 [WireGuard®](https://www.wireguard.com/) is an extremely simple yet fast and modern VPN that utilizes state-of-the-art cryptography. It aims to be faster, simpler, leaner, and more useful than IPsec, while avoiding the massive headache. It intends to be considerably more performant than OpenVPN. WireGuard is designed as a general purpose VPN for running on embedded interfaces and super computers alike, fit for many different circumstances. Initially released for the Linux kernel, it is now cross-platform (Windows, macOS, BSD, iOS, Android) and widely deployable. It is currently under heavy development, but already it might be regarded as the most secure, easiest to use, and simplest VPN solution in the industry.
@@ -12,9 +12,7 @@
 
 This fork adds one feature on top of the upstream linuxserver image:
 
-* **IPv6 GUA (Global Unicast Address) support** — set the `IP6_SUBNET` environment variable to give the WireGuard tunnel a dual-stack (IPv4 + IPv6) configuration. The server gets `::1/128`; peers are assigned sequential `/128` addresses (`::2`, `::3`, …). The feature is entirely opt-in: omitting `IP6_SUBNET` produces behaviour identical to upstream. See the [IPv6 GUA Support](#ipv6-gua-global-unicast-address-support) section below for full setup instructions.
-
-Everything else — base image, s6 init, CoreDNS, key management, QR code generation — is unchanged from upstream.
+* **IPv6 support** — set the `IP6_SUBNET` environment variable to give the WireGuard tunnel a dual-stack (IPv4 + IPv6) configuration. The server gets `::1/128`; peers are assigned sequential `/128` addresses (`::2`, `::3`, …). The feature is entirely opt-in: omitting `IP6_SUBNET` produces behaviour identical to upstream. See the [IPv6 Support](#ipv6-support) section below for full setup instructions.
 
 ## Supported Architectures
 
@@ -57,27 +55,28 @@ Do not set the `PEERS` environment variable. Drop your client conf(s) into the c
 
 If you get IPv6 related errors in the log and connection cannot be established, edit the `AllowedIPs` line in your peer/client wg0.conf to include only `0.0.0.0/0` and not `::/0`; and restart the container.
 
-## IPv6 GUA (Global Unicast Address) Support
+## IPv6 Support
 
-This fork of WireGuard supports optional dual-stack (IPv4+IPv6) tunnel configuration via the `IP6_SUBNET` environment variable. When set, both the server and all peers receive IPv6 GUA addresses in addition to their IPv4 address.
+This fork supports optional dual-stack (IPv4+IPv6) tunnel configuration via the `IP6_SUBNET` environment variable. When set, both the server and all peers receive IPv6 addresses in addition to their IPv4 address. Both GUAs (Global Unicast Addresses) and ULAs (Unique Local Addresses) are supported using either host or bridge networking.
 
-**CRITICAL: IPv6 routing WILL NOT WORK out of the box. ADDITIONAL CONFIGURATION IS REQUIRED.**
+IPv6 routing **will not work out of the box**—two additional configuration steps are required:
 
-A static IPv6 route must be configured on your router pointing `IP6_SUBNET`, via your host's link-local IPv6 address, on the router's LAN interface. Without this, IPv6 traffic will fail to reach the peers.
+1. A static IPv6 route must be configured on your router pointing `IP6_SUBNET` at your host's link-local IPv6 address over the router's LAN interface. 
 
-The host's link-local address can be found by running:
+The host's link-local address can be found by running the following command and identifying the address beginning with `fe80::`.
 ```bash
-ip -c -6 -brief addr | grep <LAN interface>
+ip -6 -brief addr | grep <LAN interface>
 ```
-...and identifying the address beginning with `fe80::`.
 
-### Host Networking
-
-Enable IPv6 forwarding on the host by enabling the following sysctls:
+2. The host system must support IPv6 forwarding. On Linux, this is done by setting the following sysctl values:
 ```conf
 net.ipv6.conf.all.disable_ipv6=0
 net.ipv6.conf.all.forwarding=1
 ```
+
+### Host Networking
+
+Host networking is the simplest and recommended configuration.
 
 Example docker-compose file:
 
@@ -146,17 +145,20 @@ services:
     restart: unless-stopped
 ```
 
-Add a static IPv6 route on the host pointing `IP6_SUBNET` to the container's IPv6 address within the `wg6` network:
+Now, we need an additional static route pointing incoming traffic to the `wg6` network, from which it will be routed to the container. First, determine the container's IPv6 address on the `wg6` network:
+```bash
+docker exec wireguard ip -6 -brief addr | grep eth0
+```
+This will show output like: `eth0  UP  2001:db8:b00b:42b::2/64 fe80::...`
+
+The address you need is the first one (not the `fe80::` link-local address).
+
+Then add the static route pointing using that address, e.g.:
 ```bash
 sudo ip -6 route add 2001:db8:b00b:42a::/64 via 2001:db8:b00b:42b::2
 ```
 
-Confirm the `via` address is correct by executing:
-```bash
-docker exec wireguard ip -6 -brief addr | grep eth0
-```
-
-**Note:** host routes added via `ip route` are ephemeral — you must make them persistent via your system's network configuration or they will be lost on container or host reboot.
+Note that routes added with `ip route` are ephemeral—you must make them persistent via your system's network configuration or they will be lost on container or host reboot.
 
 
 ## Road warriors, roaming and returning home
@@ -287,7 +289,7 @@ Containers are configured using parameters passed at runtime (such as those abov
 | `-e PEERS=1` | Number of peers to create confs for. Required for server mode. Can also be a list of names: `myPC,myPhone,myTablet` (alphanumeric only) |
 | `-e PEERDNS=auto` | DNS server set in peer/client configs (can be set as `8.8.8.8`). Used in server mode. Defaults to `auto`, which uses wireguard docker host's DNS via included CoreDNS forward. |
 | `-e INTERNAL_SUBNET=10.13.13.0` | Internal subnet for the wireguard and server and peers (only change if it clashes). Used in server mode. |
-| `-e IP6_SUBNET=` | IPv6 subnet for dual-stack tunnel configuration (e.g. `2001:db8:b00b:420::`). Must end with `:`. Accepts optional CIDR prefix /64–/112. Server gets `::1/128`, peers get sequential `::2/128`, `::3/128`, etc. Requires a static IPv6 route on your router. See [IPv6 GUA Support](#ipv6-gua-global-unicast-address-support). |
+| `-e IP6_SUBNET=` | IPv6 subnet for dual-stack tunnel configuration (e.g. `2001:db8:420:b00b::`). Must end with `:`. Accepts optional CIDR prefix /64–/112. Server gets `::1/128`, peers get sequential `::2/128`, `::3/128`, etc. Requires a static IPv6 route on your router. See [IPv6 Support](#ipv6-support). |
 | `-e ALLOWEDIPS=0.0.0.0/0` | The IPs/Ranges that the peers will be able to reach using the VPN connection. If not specified the default value is: '0.0.0.0/0, ::0/0' This will cause ALL traffic to route through the VPN, if you want split tunneling, set this to only the IPs you would like to use the tunnel AND the ip of the server's WG ip, such as 10.13.13.1. |
 | `-e PERSISTENTKEEPALIVE_PEERS=` | Set to `all` or a list of comma separated peers (ie. `1,4,laptop`) for the wireguard server to send keepalive packets to listed peers every 25 seconds. Useful if server is accessed via domain name and has dynamic IP. Used only in server mode. |
 | `-e LOG_CONFS=true` | Generated QR codes will be displayed in the docker log. Set to `false` to skip log output. |
