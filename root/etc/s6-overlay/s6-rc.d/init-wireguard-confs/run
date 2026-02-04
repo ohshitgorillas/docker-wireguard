@@ -232,8 +232,22 @@ if [[ -n "$PEERS" ]]; then
         fi
     fi
     if [[ -n "$IP6_SUBNET" ]]; then
+        # Reject link-local addresses (fe80::/10)
+        if [[ "$IP6_SUBNET" =~ ^fe8[0-9a-fA-F]: ]] || [[ "$IP6_SUBNET" =~ ^fe9[0-9a-fA-F]: ]] || [[ "$IP6_SUBNET" =~ ^fea[0-9a-fA-F]: ]] || [[ "$IP6_SUBNET" =~ ^feb[0-9a-fA-F]: ]]; then
+            echo "**** ERROR: IP6_SUBNET cannot be link-local (fe80::/10). IPv6 disabled. ****"
+            IP6_SUBNET=""
+        fi
+    fi
+    if [[ -n "$IP6_SUBNET" ]]; then
+        # Reject multicast addresses (ff00::/8)
+        if [[ "$IP6_SUBNET" =~ ^ff[0-9a-fA-F]{2}: ]]; then
+            echo "**** ERROR: IP6_SUBNET cannot be multicast (ff00::/8). IPv6 disabled. ****"
+            IP6_SUBNET=""
+        fi
+    fi
+    if [[ -n "$IP6_SUBNET" ]]; then
         IP6_ADDR_SERVER="${IP6_SUBNET}1/128"
-        echo "**** IPv6 subnet is set to ${IP6_SUBNET}, server IPv6 will be ${IP6_ADDR_SERVER} ****"
+        echo "**** IPv6 enabled - subnet: ${IP6_SUBNET}, server address: ${IP6_ADDR_SERVER} ****"
     fi
     if [[ -z "$PEERDNS" ]] || [[ "$PEERDNS" = "auto" ]]; then
         PEERDNS="${INTERFACE}.1"
