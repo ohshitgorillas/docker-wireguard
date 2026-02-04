@@ -71,8 +71,6 @@ ip -c -6 -brief addr | grep <LAN interface>
 ```
 ...and identifying the address beginning with `fe80::`.
 
-Finally, `SYS_MODULE` capability is required when using IPv6.
-
 ### Host Networking
 
 Enable IPv6 forwarding on the host by enabling the following sysctls:
@@ -289,7 +287,7 @@ Containers are configured using parameters passed at runtime (such as those abov
 | `-e PEERS=1` | Number of peers to create confs for. Required for server mode. Can also be a list of names: `myPC,myPhone,myTablet` (alphanumeric only) |
 | `-e PEERDNS=auto` | DNS server set in peer/client configs (can be set as `8.8.8.8`). Used in server mode. Defaults to `auto`, which uses wireguard docker host's DNS via included CoreDNS forward. |
 | `-e INTERNAL_SUBNET=10.13.13.0` | Internal subnet for the wireguard and server and peers (only change if it clashes). Used in server mode. |
-| `-e IP6_SUBNET=` | IPv6 subnet for dual-stack tunnel configuration (e.g. `2001:db8:b00b:420::`). Must end with `:`. Accepts optional CIDR prefix /64–/112. Server gets `::1/128`, peers get sequential `::2/128`, `::3/128`, etc. Requires `SYS_MODULE` cap and a static IPv6 route on your router. See [IPv6 GUA Support](#ipv6-gua-global-unicast-address-support). |
+| `-e IP6_SUBNET=` | IPv6 subnet for dual-stack tunnel configuration (e.g. `2001:db8:b00b:420::`). Must end with `:`. Accepts optional CIDR prefix /64–/112. Server gets `::1/128`, peers get sequential `::2/128`, `::3/128`, etc. Requires a static IPv6 route on your router. See [IPv6 GUA Support](#ipv6-gua-global-unicast-address-support). |
 | `-e ALLOWEDIPS=0.0.0.0/0` | The IPs/Ranges that the peers will be able to reach using the VPN connection. If not specified the default value is: '0.0.0.0/0, ::0/0' This will cause ALL traffic to route through the VPN, if you want split tunneling, set this to only the IPs you would like to use the tunnel AND the ip of the server's WG ip, such as 10.13.13.1. |
 | `-e PERSISTENTKEEPALIVE_PEERS=` | Set to `all` or a list of comma separated peers (ie. `1,4,laptop`) for the wireguard server to send keepalive packets to listed peers every 25 seconds. Useful if server is accessed via domain name and has dynamic IP. Used only in server mode. |
 | `-e LOG_CONFS=true` | Generated QR codes will be displayed in the docker log. Set to `false` to skip log output. |
