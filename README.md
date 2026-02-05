@@ -136,7 +136,7 @@ services:
       - PEERS=3
       - SERVERURL=wireguard.domain.com
       - INTERNAL_SUBNET=10.13.13.0/24
-      - IP6_SUBNET=2001:db8:420:b00b::/64
+      - IP6_SUBNET=2001:db8:b00b:42a::/64
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - ALLOWEDIPS=0.0.0.0/0, ::/0
       - PERSISTENTKEEPALIVE_PEERS=all
