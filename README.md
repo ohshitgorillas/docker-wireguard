@@ -57,23 +57,15 @@ If you get IPv6 related errors in the log and connection cannot be established, 
 
 ## IPv6 Support
 
-This fork supports optional dual-stack (IPv4+IPv6) tunnel configuration via the `IP6_SUBNET` environment variable. When set, both the server and all peers receive IPv6 addresses in addition to their IPv4 address. Both GUAs (Global Unicast Addresses) and ULAs (Unique Local Addresses) are supported using either host or bridge networking.
+This fork supports optional dual-stack (IPv4+IPv6) tunnel configuration via the `IP6_SUBNET` environment variable. When set, both the server and all peers receive IPv6 addresses in addition to their IPv4 address. Both GUAs (Global Unicast Addresses) and ULAs (Unique Local Addresses) are supported.
 
-Note that, if the CIDR subnet notation is not included (e.g., `IP6_SUBNET=2001:db8:420:b00b::`) and the entry ends in `:`, you must enclose the argument in quotes, e.g., `- "IP6_SUBNET=2001:db8:420:b00b::"`.
+Acceptable subnet sizes range from `::/64` to `::/112`. If CIDR notation is omitted and the value ends in `:`, enclose it in quotes, e.g., `- "IP6_SUBNET=2001:db8:420:b00b:69::"`, to avoid yaml parsing errors. Including the prefix avoids this: `- IP6_SUBNET=2001:db8:420:b00b:69::/80`.
 
-IPv6 routing **will not work out of the box**—two additional configuration steps are required:
+To ensure that IPv6 packets are forwarded properly, enable IPv6 forwarding on the host (e.g., by enforcing the sysctl `net.ipv6.conf.all.forwarding=1`; you may also need to set `net.ipv6.conf.all.disable_ipv6=0`).
 
-1. A static IPv6 route must be configured on your router pointing `IP6_SUBNET` at your host's link-local IPv6 address over the router's LAN interface. 
-
-The host's link-local address can be found by running the following command and identifying the address beginning with `fe80::`.
+For deployment on a home network, you must additionally configure your router to point `IP6_SUBNET` to your host's link-local address on the LAN interface. Find your host's link-local address by running the following command and identifying the address beginning with `fe80::`.
 ```bash
 ip -6 -brief addr | grep <LAN interface>
-```
-
-2. The host system must support IPv6 forwarding. On Linux, this is done by setting the following sysctl values:
-```conf
-net.ipv6.conf.all.disable_ipv6=0
-net.ipv6.conf.all.forwarding=1
 ```
 
 ### Host Networking
@@ -105,7 +97,7 @@ services:
 
 ### Bridge Networking
 
-Bridge networking is also possible, but requires privileged mode, an additional `::/64` subnet, and an additional static route on the host.
+Bridge networking is also possible, but requires privileged mode, an additional subnet, and a static route for the packets to make it inside the container.
 
 Example docker-compose file:
 ```yaml
@@ -115,7 +107,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: "2001:db8:b00b:42b::/64"
+        - subnet: "2001:db8:b00b:420:666::/80"
 
 services:
   wireguard:
@@ -136,7 +128,7 @@ services:
       - PEERS=3
       - SERVERURL=wireguard.domain.com
       - INTERNAL_SUBNET=10.13.13.0/24
-      - IP6_SUBNET=2001:db8:b00b:42a::/64
+      - IP6_SUBNET=2001:db8:b00b:420:69::/80
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - ALLOWEDIPS=0.0.0.0/0, ::/0
       - PERSISTENTKEEPALIVE_PEERS=all
@@ -151,13 +143,13 @@ Now, we need an additional static route pointing incoming traffic to the `wg6` n
 ```bash
 docker exec wireguard ip -6 -brief addr | grep eth0
 ```
-This will show output like: `eth0  UP  2001:db8:b00b:42b::2/64 fe80::...`
+This will show output like: `eth0  UP  2001:db8:b00b:420:666::2/80 fe80::...`
 
 The address you need is the first one (not the `fe80::` link-local address).
 
 Then add the static route pointing using that address, e.g.:
 ```bash
-sudo ip -6 route add 2001:db8:b00b:42a::/64 via 2001:db8:b00b:42b::2
+sudo ip -6 route add 2001:db8:b00b:420:69::/80 via 2001:db8:b00b:420:666::2
 ```
 
 Note that routes added with `ip route` are ephemeral—you must make them persistent via your system's network configuration or they will be lost on container or host reboot.
