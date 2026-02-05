@@ -59,6 +59,8 @@ If you get IPv6 related errors in the log and connection cannot be established, 
 
 This fork supports optional dual-stack (IPv4+IPv6) tunnel configuration via the `IP6_SUBNET` environment variable. When set, both the server and all peers receive IPv6 addresses in addition to their IPv4 address. Both GUAs (Global Unicast Addresses) and ULAs (Unique Local Addresses) are supported using either host or bridge networking.
 
+Note that, if the CIDR subnet notation is not included (e.g., `IP6_SUBNET=2001:db8:420:b00b::`) and the entry ends in `:`, you must enclose the argument in quotes, e.g., `- "IP6_SUBNET=2001:db8:420:b00b::"`.
+
 IPv6 routing **will not work out of the box**—two additional configuration steps are required:
 
 1. A static IPv6 route must be configured on your router pointing `IP6_SUBNET` at your host's link-local IPv6 address over the router's LAN interface. 
@@ -95,7 +97,7 @@ services:
     environment:
       - PEERS=3
       - SERVERURL=wireguard.domain.com
-      - "IP6_SUBNET=2001:db8:b00b:42a::"
+      - IP6_SUBNET=2001:db8:420:b00b::/64
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - PERSISTENTKEEPALIVEPEERS=all
     restart: unless-stopped
@@ -134,7 +136,7 @@ services:
       - PEERS=3
       - SERVERURL=wireguard.domain.com
       - INTERNAL_SUBNET=10.13.13.0/24
-      - "IP6_SUBNET=2001:db8:b00b:42a::"
+      - IP6_SUBNET=2001:db8:420:b00b::/64
       - PEERDNS=8.8.8.8,2001:4860:4860::8888
       - ALLOWEDIPS=0.0.0.0/0, ::/0
       - PERSISTENTKEEPALIVE_PEERS=all
