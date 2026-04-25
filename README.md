@@ -16,14 +16,22 @@ This fork adds one feature on top of the upstream linuxserver image:
 
 ## Supported Architectures
 
-This fork is not published to a container registry. Build the image locally using the instructions in [Building locally](#building-locally). The upstream linuxserver image supports multi-platform builds via Docker manifest; the same applies here.
+This fork publishes `linux/amd64` images to GHCR:
+
+```
+docker pull ghcr.io/ohshitgorillas/wireguard:latest
+```
+
+Tags available: `latest` (master), `master`, `sha-<commit>`, plus `v*` semver tags when released. Builds run via [GitHub Actions](.github/workflows/docker.yml) on every push to master.
+
+For `arm64` (or to build from source), see [Building locally](#building-locally). The upstream linuxserver image supports multi-platform builds via Docker manifest; the same applies here.
 
 The architectures supported by this image are:
 
-| Architecture | Available | Tag |
-| :----: | :----: | ---- |
-| x86-64 | ✅ | amd64-\<version tag\> |
-| arm64 | ✅ | arm64v8-\<version tag\> |
+| Architecture | Published to GHCR | Buildable locally |
+| :----: | :----: | :----: |
+| x86-64 | ✅ | ✅ (`Dockerfile`) |
+| arm64 | ❌ | ✅ (`Dockerfile.aarch64`) |
 
 ## Application Setup
 
@@ -77,7 +85,7 @@ Example docker-compose file:
 ```yaml
 services:
   wireguard:
-    image: ohshitgorillas/wireguard:latest
+    image: ghcr.io/ohshitgorillas/wireguard:latest
     container_name: wireguard
     network_mode: host
     cap_add:
@@ -111,7 +119,7 @@ networks:
 
 services:
   wireguard:
-    image: ohshitgorillas/wireguard:latest
+    image: ghcr.io/ohshitgorillas/wireguard:latest
     container_name: wireguard
     networks:
       - wg6
@@ -213,7 +221,7 @@ To help you get started creating a container from this image you can either use 
 ---
 services:
   wireguard:
-    image: ohshitgorillas/wireguard:latest
+    image: ghcr.io/ohshitgorillas/wireguard:latest
     container_name: wireguard
     cap_add:
       - NET_ADMIN
@@ -265,7 +273,7 @@ docker run -d \
   -v /lib/modules:/lib/modules `#optional` \
   --sysctl="net.ipv4.conf.all.src_valid_mark=1" \
   --restart unless-stopped \
-  ohshitgorillas/wireguard:latest
+  ghcr.io/ohshitgorillas/wireguard:latest
 ```
 
 ## Parameters
