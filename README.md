@@ -235,7 +235,7 @@ services:
       - PEERS=1 #optional
       - PEERDNS=auto #optional
       - INTERNAL_SUBNET=10.13.13.0 #optional
-      - IP6_SUBNET=2001:db8:b00b:420::/64
+      - IP6_SUBNET=2001:db8:b00b:420::/64 #optional
       - ALLOWEDIPS=0.0.0.0/0 #optional
       - PERSISTENTKEEPALIVE_PEERS= #optional
       - LOG_CONFS=true #optional
