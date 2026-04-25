@@ -235,7 +235,7 @@ services:
       - PEERS=1 #optional
       - PEERDNS=auto #optional
       - INTERNAL_SUBNET=10.13.13.0 #optional
-      - IP6_SUBNET= #optional - e.g. 2001:db8:b00b:420::
+      - IP6_SUBNET=2001:db8:b00b:420::/64
       - ALLOWEDIPS=0.0.0.0/0 #optional
       - PERSISTENTKEEPALIVE_PEERS= #optional
       - LOG_CONFS=true #optional
@@ -264,7 +264,7 @@ docker run -d \
   -e PEERS=1 `#optional` \
   -e PEERDNS=auto `#optional` \
   -e INTERNAL_SUBNET=10.13.13.0 `#optional` \
-  -e IP6_SUBNET= `#optional - e.g. 2001:db8:b00b:420::` \
+  -e IP6_SUBNET=2001:db8:b00b:420::/64` \
   -e ALLOWEDIPS=0.0.0.0/0 `#optional` \
   -e PERSISTENTKEEPALIVE_PEERS= `#optional` \
   -e LOG_CONFS=true `#optional` \
