@@ -243,11 +243,12 @@ init_diagram: |
     svc-wireguard -> legacy-services
   }
   Base Images: {
-    "baseimage-alpine:3.23"
+    "baseimage-alpine:3.24"
   }
   "wireguard:latest" <- Base Images
 # changelog
 changelogs:
+  - {date: "05.07.26:", desc: "Rebase to Alpine 3.24."}
   - {date: "24.01.26:", desc: "Rebase to Alpine 3.23 again as openresolv alpine 3.23 package has now been updated."}
   - {date: "22.01.26:", desc: "Revert to Alpine 3.22 due to resolvconf bug."}
   - {date: "04.01.26:", desc: "Rebase to Alpine 3.23."}
